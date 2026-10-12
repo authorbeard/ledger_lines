@@ -43,4 +43,39 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
   end
+
+  def test_a_payment_memo_without_an_opposite_leg_is_a_purchase
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1022,1,2026-08-11,bank,MAINLINE PROPERTIES LLC,ACH PAYMENT MAINLINE PROPERTIES,6500.00
+    CSV
+
+    assert_equal ["purchase"], feed.transactions.map(&:ledger_type)
+  end
+
+  def test_an_opposite_leg_on_the_same_account_is_not_a_transfer
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_2001,1,2026-08-08,card,PAYMENT RECEIVED,ONLINE PAYMENT - THANK YOU,-4850.00
+      txn_2002,1,2026-08-08,card,PAYMENT REVERSAL,PAYMENT REVERSAL,4850.00
+    CSV
+
+    assert_equal %w[refund purchase], feed.transactions.map(&:ledger_type)
+  end
+
+  def test_an_opposite_amount_without_a_transfer_memo_is_not_a_transfer_leg
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_2003,1,2026-08-08,bank,ONLINE PAYMENT TO CARD 4421,ONLINE PAYMENT TO CARD 4421,300.00
+      txn_2004,1,2026-08-08,card,INDEED,INDEED SPONSORED JOB CREDIT,-300.00
+    CSV
+
+    assert_equal %w[purchase refund], feed.transactions.map(&:ledger_type)
+  end
+
+  def test_transfer_memos_are_matched_regardless_of_case
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_2005,1,2026-08-08,bank,Online Payment To Card 4421,Online Payment To Card 4421,4850.00
+      txn_2006,1,2026-08-08,card,Payment Received,online payment - thank you,-4850.00
+    CSV
+
+    assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
+  end
 end
