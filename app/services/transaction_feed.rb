@@ -3,6 +3,10 @@ class TransactionFeed
     @source = source
   end
 
+  def transactions
+    latest_rows.map { |row| FeedTransaction.new(row) }
+  end
+
   def latest_rows
     CSV.new(@source, headers: true).each_with_object({}) do |row, latest_by_id|
       current = latest_by_id[row["id"]]
