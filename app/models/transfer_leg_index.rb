@@ -1,15 +1,22 @@
 class TransferLegIndex
   def initialize
-    @accounts_by_date_and_amount = Hash.new { |index, key| index[key] = Set.new }
+    @paired_transaction_ids = Set.new
   end
 
   def index(transactions)
-    transactions.select(&:transfer_memo?).each do |transaction|
-      @accounts_by_date_and_amount[[transaction.date, transaction.amount]] << transaction.account
+    unpaired_legs = Hash.new { |legs, key| legs[key] = [] }
+
+    transactions.select(&:transfer_memo?).each do |leg|
+      opposite_legs = unpaired_legs[[leg.date, -leg.amount]]
+      opposite_leg = opposite_legs.find { |candidate| candidate.account != leg.account }
+      next unpaired_legs[[leg.date, leg.amount]] << leg if opposite_leg.nil?
+
+      opposite_legs.delete(opposite_leg)
+      @paired_transaction_ids.merge([leg.id, opposite_leg.id])
     end
   end
 
   def opposite_leg_present?(transaction)
-    @accounts_by_date_and_amount.fetch([transaction.date, -transaction.amount], Set.new).any? { |account| account != transaction.account }
+    @paired_transaction_ids.include?(transaction.id)
   end
 end
