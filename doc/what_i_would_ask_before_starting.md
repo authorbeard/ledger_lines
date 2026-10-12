@@ -12,9 +12,9 @@ Question: Is a transfer correctly identified by all three of the following?
 
 MVP assumption: both legs of any transfer appear in a single CSV. If legs can be split across multiple CSV files (for example, across sync windows or separate account exports), a different tracking method is needed, such as persisting unmatched legs and reconciling them on later runs.
 
-Tests that depend on this answer and may need revision: `test_a_payment_memo_without_an_opposite_leg_is_a_purchase` (a transfer-like row missing one leg) and `test_an_opposite_leg_on_the_same_account_is_not_a_transfer` (`txn_2001` would normally have a corresponding bank leg).
+Tests that depend on this answer and may need revision: `test_rent_paid_by_ach_payment_is_a_purchase` (a payment memo with no opposite leg), `test_moves_to_and_from_savings_are_transfers` (savings legs never appear in the feed), and `test_card_payment_legs_on_the_same_account_are_not_transfers` (the bank leg of a card payment moved onto the card account).
 
-Follow-up: legs pair one-to-one, in feed order. When two candidate legs share a date and amount (for example, a 500.00 card payment and a 500.00 ACH rent payment on the same day as a -500.00 card credit), the one that appears first in the file is paired. The rent payment could be recorded as the transfer. Is there a more reliable signal for pairing, such as a reference number shared by both legs or the card's last four digits in the memo?
+Follow-up: legs pair one-to-one within each group of the same date and amount, in transaction id order, after the whole file is read. When two candidate legs share a date and amount (for example, a 500.00 card payment and a 500.00 ACH rent payment on the same day as a -500.00 card credit), the one with the lower transaction id is paired. The rent payment could be recorded as the transfer. Is there a more reliable signal for pairing, such as a reference number shared by both legs or the card's last four digits in the memo?
 
 Follow-up: the feed contains only the card and bank accounts. The savings moves (`txn_1027` TRANSFER TO SAVINGS 8810, `txn_1040` TRANSFER FROM SAVINGS 8810) have only their bank leg in the CSV, but the story says moves to and from savings are transfers. Should the savings account be treated as an operator account whose leg is not expected in the feed?
 
@@ -52,7 +52,7 @@ Interim decision: a frozen hash constant on `MerchantCategory`.
 
 ## 6. Should each row's original data be persisted with its LedgerLine?
 
-Context: a ledger line keeps only the normalized fields. The provider's memo, merchant string, account, and sync_batch are dropped after classification.
+Context: during an import, each `LedgerLine` carries the provider's account, merchant, memo and sync_batch so it can be classified, but the output keeps only the normalized fields. Once lines are persisted, those source fields would be dropped unless stored.
 
 Question: Should each row's original data be stored alongside the LedgerLine record (for example, as a JSON column), for audit and for re-classifying lines when the rules change?
 
@@ -64,7 +64,7 @@ Context: the rules depend on the account being card or bank. A row from any othe
 
 Question: What is the full set of account values, and are they stable identifiers or display names?
 
-Interim decision: account names are compared case-insensitively. Rows from an account other than card or bank are classified by the same rules but flagged for review.
+Interim decision: account names are compared case-insensitively. A row from an account other than card or bank can never be a refund or deposit, so it is typed as a purchase (or a transfer, if it pairs), categorized Uncategorized, and flagged for review.
 
 ## 8. How should zero-amount transactions be treated?
 
@@ -88,7 +88,7 @@ Context: a row with a missing id, a non-ISO date, or an amount the parser cannot
 
 Question: Should one bad row fail the whole import, or be skipped (or recorded and flagged) while the rest of the feed goes through? Can the provider send amounts with thousands separators, currency symbols, or more than two decimal places? Are the header names fixed, including their case?
 
-Interim decision: fail the import with the line number or the offending value, so nothing is recorded from a feed that was only partly understood.
+Interim decision: fail the import, so nothing is recorded from a feed that was only partly understood. A missing id reports its line number; other malformed values raise the parser's own error (for example, "invalid date"), which does not yet name the row.
 
 ## 11. Should we assume or enforce US date patterns?
 
@@ -124,7 +124,7 @@ Interim decision: classified by the standard rules (refund and purchase).
 
 ## 15. How should a transaction whose type cannot be determined be recorded?
 
-Context: every row currently falls through to purchase when no other rule matches, so the type is never unknown. Rows from unrecognized accounts are flagged for review but still typed by the standard rules. They should also be categorized Uncategorized.
+Context: every row falls through to purchase when no other rule matches, so the type is never unknown. Rows from unrecognized accounts are typed by the standard rules, categorized Uncategorized, and flagged for review.
 
 Question: Should an unclassifiable row leave its type blank and be flagged `needs_review`? That would make the `transaction_type` enum nullable.
 

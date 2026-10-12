@@ -19,9 +19,9 @@ My part of the work, as distinct from what Claude Code generated.
 - Refined the transfer rule: a transfer must include "payment" or "transfer" and have a corresponding leg in another operator account, with both legs assumed to be in a single CSV for the MVP. Rent goes to a third party, so it is a purchase.
 - Added storing the original CSVs (S3 or a data warehouse) to the follow-up work, and asked whether each row's original data should be persisted with its ledger line.
 - Required anything under `app/services` to be named as a service.
-- Ordered an adversarial review of the classifier, then a second round focused on over-engineering.
+- Ordered three rounds of adversarial review: the classifier's edge cases, over-engineering (using Ponytail), and regressions from the single-pass refactor.
 - Asked whether US date patterns should be assumed or enforced.
-- After the over-engineering review, chose a middle-ground refactor over collapsing everything into a single service: a service that takes the file path and returns the ledger CSV, while keeping the `Ledger`, `LedgerLine` and `FeedTransaction` shapes. This was in part because we don't yet know enough to begin implementing the `Ledger` class, or some of the others, so they stay minimal rather than being either removed or built out.
+- After the over-engineering review, chose a middle-ground refactor over collapsing everything into a single service: a service that takes the file path and returns the ledger CSV, while keeping the `Ledger`, `LedgerLine` and `FeedTransaction` shapes (`FeedTransaction` was later merged into `LedgerLine`; see Second review round). This was in part because we don't yet know enough to begin implementing the `Ledger` class, or some of the others, so they stay minimal rather than being either removed or built out.
 - Moved the work onto a branch for review and kept all agent configuration out of the repository.
 
 ## PR review
