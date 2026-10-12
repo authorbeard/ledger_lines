@@ -120,4 +120,20 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal [["refund", "Repairs & maintenance", false]], feed.transactions.map { |transaction| [transaction.ledger_type, transaction.category, transaction.needs_review?] }
   end
+
+  def test_account_names_are_matched_regardless_of_case
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_1018,1,2026-08-08,Card,SYSCO PHILA 8827,SYSCO CREDIT SHORTED DELIVERY,-184.20
+    CSV
+
+    assert_equal ["refund"], feed.transactions.map(&:ledger_type)
+  end
+
+  def test_a_row_from_an_unrecognized_account_is_flagged_for_review
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_2007,1,2026-08-08,amex,SYSCO PHILA 8827,SYSCO PHILA 8827,-184.20
+    CSV
+
+    assert_equal [true], feed.transactions.map(&:needs_review?)
+  end
 end
