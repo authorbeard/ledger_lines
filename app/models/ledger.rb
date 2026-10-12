@@ -12,4 +12,24 @@ class Ledger
     line.assign_attributes(attributes)
     line
   end
+
+  def import(transactions)
+    transactions.each do |transaction|
+      record(
+        transaction_id: transaction.id,
+        date: transaction.date,
+        transaction_type: transaction.ledger_type,
+        category: transaction.category,
+        amount: transaction.amount,
+        needs_review: transaction.needs_review?
+      )
+    end
+  end
+
+  def to_csv
+    CSV.generate do |csv|
+      csv << LedgerLine::CSV_HEADERS
+      lines.each { |line| csv << line.to_csv_row }
+    end
+  end
 end

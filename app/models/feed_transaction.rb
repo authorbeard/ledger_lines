@@ -21,6 +21,10 @@ class FeedTransaction
     category == UNCATEGORIZED
   end
 
+  def id
+    @row["id"]
+  end
+
   def date
     @row["date"]
   end
