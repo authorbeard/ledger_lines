@@ -7,27 +7,16 @@ class Ledger
     @lines_by_transaction_id.values
   end
 
-  def record(transaction_id:, **attributes)
+  def record(transaction_id:, sync_batch:, **attributes)
     line = @lines_by_transaction_id[transaction_id] ||= LedgerLine.new(transaction_id:)
-    line.assign_attributes(attributes)
+    line.assign_attributes(sync_batch:, **attributes) if line.sync_batch.nil? || sync_batch > line.sync_batch
     line
-  end
-
-  def record_transaction(transaction)
-    record(
-      transaction_id: transaction.id,
-      date: transaction.date,
-      transaction_type: transaction.ledger_type,
-      category: transaction.category,
-      amount: transaction.amount,
-      needs_review: transaction.needs_review?
-    )
   end
 
   def to_csv
     CSV.generate do |csv|
       csv << LedgerLine::CSV_HEADERS
-      lines.sort_by(&:transaction_id).each { |line| csv << line.to_csv_row }
+      lines.each { |line| csv << line.to_csv_row }
     end
   end
 end

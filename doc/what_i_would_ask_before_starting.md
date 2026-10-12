@@ -132,8 +132,8 @@ Interim decision: fall through to purchase and flag for review where the account
 
 ## 16. What order should ledger lines be output in?
 
-Context: output is sorted by transaction id so that it never depends on the order of rows in the feed. Ids are compared as strings, so `txn_999` would sort after `txn_1000`.
+Context: lines are written in the order their transaction ids first appear in the feed. Sorting them (by id or date) would make the output order independent of the feed's row order, but adds an O(u log u) step to an otherwise linear import.
 
-Question: Should lines be ordered by id, by date, or by something else? Are ids always the same width?
+Question: Does anything downstream depend on line order, or will order come from the database once lines are persisted?
 
-Interim decision: sort by id as a string.
+Interim decision: first-appearance order, with no sort.

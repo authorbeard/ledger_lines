@@ -20,6 +20,13 @@ class MerchantCategory
 
   def self.for(merchant)
     normalized_merchant = merchant.to_s.upcase
-    CATEGORIES_BY_MERCHANT_PREFIX.find { |prefix, _category| normalized_merchant.start_with?(prefix) }&.last
+    categories_by_merchant.fetch(normalized_merchant) do
+      categories_by_merchant[normalized_merchant] =
+        CATEGORIES_BY_MERCHANT_PREFIX.find { |prefix, _category| normalized_merchant.start_with?(prefix) }&.last
+    end
+  end
+
+  def self.categories_by_merchant
+    @categories_by_merchant ||= {}
   end
 end

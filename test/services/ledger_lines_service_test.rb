@@ -83,10 +83,11 @@ class LedgerLinesServiceTest < Minitest::Test
     assert_equal LedgerLinesService.call(FIXTURE_FEED), LedgerLinesService.call(FIXTURE_FEED)
   end
 
-  def test_row_order_in_the_feed_does_not_change_the_output
+  def test_row_order_in_the_feed_does_not_change_the_ledger_lines
     header, *rows = @fixture_feed.lines
+    reversed_lines = ledger_lines_by_id(ledger_lines_for([header, *rows.reverse].join))
 
-    assert_equal LedgerLinesService.call(FIXTURE_FEED), ledger_lines_for([header, *rows.reverse].join)
+    assert_equal @lines, reversed_lines
   end
 
   def test_reads_a_feed_with_a_byte_order_mark_and_blank_lines
