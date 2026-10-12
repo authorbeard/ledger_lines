@@ -13,23 +13,21 @@ class Ledger
     line
   end
 
-  def import(transactions)
-    transactions.each do |transaction|
-      record(
-        transaction_id: transaction.id,
-        date: transaction.date,
-        transaction_type: transaction.ledger_type,
-        category: transaction.category,
-        amount: transaction.amount,
-        needs_review: transaction.needs_review?
-      )
-    end
+  def record_transaction(transaction)
+    record(
+      transaction_id: transaction.id,
+      date: transaction.date,
+      transaction_type: transaction.ledger_type,
+      category: transaction.category,
+      amount: transaction.amount,
+      needs_review: transaction.needs_review?
+    )
   end
 
   def to_csv
     CSV.generate do |csv|
       csv << LedgerLine::CSV_HEADERS
-      lines.each { |line| csv << line.to_csv_row }
+      lines.sort_by(&:transaction_id).each { |line| csv << line.to_csv_row }
     end
   end
 end
