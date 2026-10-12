@@ -27,7 +27,7 @@ class FeedTransaction
   end
 
   def date
-    @row["date"]
+    Date.iso8601(@row["date"].to_s)
   end
 
   def account

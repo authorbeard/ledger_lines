@@ -136,4 +136,12 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal [true], feed.transactions.map(&:needs_review?)
   end
+
+  def test_rejects_a_date_that_is_not_iso_8601
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_1001,1,08/03/2026,card,SYSCO PHILA 8827,SYSCO PHILA 8827,1842.17
+    CSV
+
+    assert_raises(Date::Error) { feed.transactions.map(&:date) }
+  end
 end
