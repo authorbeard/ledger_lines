@@ -87,3 +87,11 @@ Context: a row with a missing id, a non-ISO date, or an amount the parser cannot
 Question: Should one bad row fail the whole import, or be skipped (or recorded and flagged) while the rest of the feed goes through? Can the provider send amounts with thousands separators, currency symbols, or more than two decimal places? Are the header names fixed, including their case?
 
 Interim decision: fail the import with the line number or the offending value, so nothing is recorded from a feed that was only partly understood.
+
+## 11. Should we assume or enforce US date patterns?
+
+Context: the fixture feed uses ISO 8601 dates (`2026-08-03`). A US-style date such as `08/03/2026` would otherwise be parsed day-first and recorded as March 8 without any error.
+
+Question: Should we assume or enforce US date patterns (`MM/DD/YYYY`) for provider feeds, or does every provider send ISO 8601?
+
+Interim decision: only ISO 8601 dates are accepted; any other format stops the import.
