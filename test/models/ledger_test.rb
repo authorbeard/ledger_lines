@@ -28,4 +28,14 @@ class LedgerTest < Minitest::Test
     assert_equal 56, ledger.lines.size
     assert_equal first_import, ledger.to_csv
   end
+
+  def test_feed_row_order_does_not_change_the_ledger_lines
+    header, *rows = File.read(File.join(FIXTURE_FILES, "transactions.csv")).lines
+    in_order = Ledger.new
+    in_order.import(TransactionFeedService.new(StringIO.new([header, *rows].join)).transactions)
+    reversed = Ledger.new
+    reversed.import(TransactionFeedService.new(StringIO.new([header, *rows.reverse].join)).transactions)
+
+    assert_equal in_order.to_csv.lines.sort, reversed.to_csv.lines.sort
+  end
 end
