@@ -1,0 +1,93 @@
+20261012_exponent_takehome_notes.txt
+
+From CSV input: 
+
+- ID -> transaction_id
+  - find_or_create_by
+
+type -> enum: [purchase, refund, deposit, transfer]
+
+merchant.downcase -> category hardcoded in
+- if nill, needs_review: true
+
+
+
+transfer: memo includes "payment" or "transfer" 
+refund: csv[account] = "card" && not a transfer && amt < 0 
+deposit: csv[account] = "bank" && not a transfer && amt < 0 
+purchase: whatever remains
+
+
+
+
+---------------------------------
+
+No need for full rails repo
+no need for db
+
+
+Rake task with filepath as sole arg, txn lines as sole output
+- All functionality should be written as if is a set of classes (models, services) within Rails app, or easily transferrable to that 
+---------------------------------
+first read this, looked at attachments, asked ?s
+
+Then created new repo for this
+
+Then fed this prompt
+
+
+----------------------------------
+
+Initial prompt: 
+
+I want to build a lightweight but well-tested rake task that standardizes transactions from mulitple accounts. Those transactions will be compiled into a csv document and need to be converted into ledger_lines. This likely should be a simple rake task for demonstration purposes; it likely does not justify generating an entirely new Rails project and database for our purposes. We should be able to implement this code within an existing Rails app, so design accordingly. 
+
+For example, `LedgerLine` likely would be its own model, belonging to a `Ledger`, which would have_many LedgerLines and contain metadata along with collecting individual lines. 
+
+For another example, we know that a LedgerLine could be one of four values: pruchase, rfund,deposit, transfer. That would likely be an enum in an ActiveRecord model and should be treated as such here. 
+
+Also, as part of a Rails project, the test suite here would likely include FactoryBot, with factories defined for all the ledger_lines transaction types. Keep track of things like this on a list of "What I would do next"
+
+How to handle a transaction that does not clearly fit into any of these categories is an unanswered question. That normally would be asked and answered as part of the development process. Keep track of these as they arise, for later output. Include whatever decision was made in the meantime in order to avoid getting blocked. Call this list "what I would ask before starting"
+
+The project directory can be found at `/Users/michaelnolan/Desktop/Personal/Job/Exponent Financial`. You have permission to read and write to that directory and to commit and push as needed to the git repo contained therein, which is called ledger_lines. There is a file in the project directory called project_description. It contains the first set of rules for what we are implementing, as well as further context around the present task. There are further files there: transactions.csv should be treated as a set of text fixtures. expected_first_15.csv is what the code should be validated against. Use these values for test expectations. 
+
+Idempotency is of critical importance here. Note rule 1: The csvs have an "id" column that contains a transaction number. This does not correspond to a primary key in a database; it corresponds to each ledger_line's transaction_id. In a Rails project, this would be handled by something like a find_or_initalize_by or a find_or_create_by. Consider whether it's worth multiple passes over the CSV in order to group rows by txn_id, or by account, or by some other attribute. This likely is not the optimal approach, and we should assume that the transaction csvs will be a good deal larger than this example set, making multiple iterations -- let alone nested iterations -- potentially particularly costly. 
+
+Begin with tests, and begin with idempotency first. This cannot fail. 
+
+After that, move on to to categorization. This is likely to be the most complex part, so it deserves special attention. We will need some performant and reliable way to distinguish transactions, since distinguising refunds & payments from txns and from each other requires this. 
+
+At the moment, this is how the categorization appears to be broken down, but verify this via testing and adversarial review: 
+
+transfer: memo includes "payment" or "transfer" 
+- postivie/negative irrelevant here (could be positive for the card side, negative for the bank side, for example)
+refund: csv[account] = "card" && not a transfer && amt < 0 
+- negative amount
+deposit: csv[account] = "bank" && not a transfer && amt < 0 
+- negatige amount
+purchase: whatever remains
+
+Use TDD to build these up, and start here: 
+1. idempotency (whenever the same id shows up twice in the source, choose the one with the largest sync_batch value)
+2. Categorization: Use the merchant_list screenshot to build a reference; in actual practice, this would likely be a fairly static db table or a hash stored in a constant. One of the things I'd do before even beginning to code would be to establish what the house convention is, if there is one, and if there isn't, discuss this with someone; for now, a simple key-value store suffices. Make sure to ignore case in the category lookup. Merchants are likely to repeat over time, so one of the things I'd do next would be to find a way, over time, to build up an association between all the variants of a merchant's entry in the transaction csvs, so that we don't have to keep doing the key lookup, which is likely to be somewhat costly, especially if it involves Regex. Don't worry about that now, though; it's a premature optimization. 
+3. Type: see above breakdown of the types. Negative amounts have the most complexity around them. 
+  - negative/positive doesn't matter if an account is a transfer, and this entails parsing the memo in the source csv. This should nto be case-sensitive
+  - negative amounts on the card, if they're not transfers, are refunds
+  - negative amounts on the bank, if they're not transfers, are deposits. 
+
+When assessing the ledger_line type, be careful to avoid excessive complexity. Emphasize readability and avoid case statments and, wherever possible, branching logic. It would be good to be able to glance at a higher-level method and see something like: 
+- check_for_transaction 
+  check_for_refund
+  check_for_deposit
+
+  and then record a purchase if the csv line is none of the above, but that is pseudocode and should not be regarded as a spec unto itself. 
+
+As you write each test and make it pass, commit and push. 
+
+At the end, write a Readme as described in the project docs and create and additional directory, docs, for the lists I specified (what I'd do next, questions I'd ask)
+
+The document "20261012_exponent_takehome_notes.txt" contains a copy of this prompt and some other notes. It will need to be included in the docs dir when you're finished. 
+
+Before you begin, reference the `.agents` dir at a path to be specified. Gitignore this, then run the /bootstrap skill and use the tools and guidelines contained in that dir. Gitgnore everything else you build there. I will give the path to you when you request it, after ingesting this prompt.
+
