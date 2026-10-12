@@ -6,7 +6,7 @@ My part of the work, as distinct from what Claude Code generated.
 
 - Created the project directory and the `ledger_lines` repository.
 - Downloaded the take-home materials: the project description, `transactions.csv`, `expected_first_15.csv`, and the merchant list screenshot.
-- Wrote the prompt that set the approach and constraints: a Rails-shaped rake task without a database, test-first, idempotency before categorization, the initial type rules, a commit per passing test, and the two running lists (questions to ask, work to do next). The prompt and my notes are in [`20261012_exponent_takehome_notes.txt`](20261012_exponent_takehome_notes.txt).
+- Wrote the prompt that set the approach and constraints: a Rails-shaped rake task without a database, test-first, idempotency before categorization, the initial type rules, a commit per passing test, and the two running lists (questions to ask, work to do next). The prompt is in [`ledger_lines_original_prompt.md`](ledger_lines_original_prompt.md).
 
 ## Decisions during development
 

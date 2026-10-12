@@ -45,7 +45,7 @@ The rake task opens the CSV and hands it to `TransactionFeedService`, which read
 - [What I would ask before starting](doc/what_i_would_ask_before_starting.md): what was unclear or wrong in the story, with the interim decision made for each.
 - [What I would do next](doc/what_i_would_do_next.md): follow-up work left out of this version.
 - [What I did](doc/what_i_did.md): my part of the work, including where I directed and overrode the AI-generated code.
-- [Prompt and notes](doc/20261012_exponent_takehome_notes.txt): the prompt Claude Code worked from.
+- [Original prompt](doc/ledger_lines_original_prompt.md): the prompt Claude Code worked from.
 
 ## Where I used AI
 

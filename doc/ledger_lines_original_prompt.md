@@ -1,45 +1,3 @@
-20261012_exponent_takehome_notes.txt
-
-From CSV input: 
-
-- ID -> transaction_id
-  - find_or_create_by
-
-type -> enum: [purchase, refund, deposit, transfer]
-
-merchant.downcase -> category hardcoded in
-- if nill, needs_review: true
-
-
-
-transfer: memo includes "payment" or "transfer" 
-refund: csv[account] = "card" && not a transfer && amt < 0 
-deposit: csv[account] = "bank" && not a transfer && amt < 0 
-purchase: whatever remains
-
-
-
-
----------------------------------
-
-No need for full rails repo
-no need for db
-
-
-Rake task with filepath as sole arg, txn lines as sole output
-- All functionality should be written as if is a set of classes (models, services) within Rails app, or easily transferrable to that 
----------------------------------
-first read this, looked at attachments, asked ?s
-
-Then created new repo for this
-
-Then fed this prompt
-
-
-----------------------------------
-
-Initial prompt: 
-
 I want to build a lightweight but well-tested rake task that standardizes transactions from mulitple accounts. Those transactions will be compiled into a csv document and need to be converted into ledger_lines. This likely should be a simple rake task for demonstration purposes; it likely does not justify generating an entirely new Rails project and database for our purposes. We should be able to implement this code within an existing Rails app, so design accordingly. 
 
 For example, `LedgerLine` likely would be its own model, belonging to a `Ledger`, which would have_many LedgerLines and contain metadata along with collecting individual lines. 
@@ -91,3 +49,4 @@ The document "20261012_exponent_takehome_notes.txt" contains a copy of this prom
 
 Before you begin, reference the `.agents` dir at a path to be specified. Gitignore this, then run the /bootstrap skill and use the tools and guidelines contained in that dir. Gitgnore everything else you build there. I will give the path to you when you request it, after ingesting this prompt.
 
+I will want a record of all of my input to be stored in doc/user_inputs. Gitignore this before creating it. 
