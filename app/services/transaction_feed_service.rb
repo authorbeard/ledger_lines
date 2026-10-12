@@ -9,7 +9,7 @@ class TransactionFeedService
   end
 
   def latest_rows
-    csv = CSV.new(@source, headers: true, skip_blanks: true)
+    csv = CSV.new(@source, headers: true, skip_blanks: true, strip: true)
     csv.each_with_object({}) do |row, latest_by_id|
       raise ArgumentError, "Missing id on line #{csv.lineno}" if row["id"].to_s.strip.empty?
 

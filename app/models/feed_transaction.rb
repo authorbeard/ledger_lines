@@ -32,7 +32,7 @@ class FeedTransaction
   end
 
   def account
-    @row["account"].to_s.strip.downcase
+    @row["account"].to_s.downcase
   end
 
   def merchant

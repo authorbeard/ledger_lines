@@ -76,4 +76,13 @@ class TransactionFeedServiceTest < Minitest::Test
     error = assert_raises(ArgumentError) { feed.latest_rows }
     assert_equal "Missing id on line 3", error.message
   end
+
+  def test_treats_ids_that_differ_only_by_surrounding_whitespace_as_the_same_transaction
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_1020,1,2026-08-10,card,SHELL OIL 57318,PENDING - SHELL OIL,1.00
+      txn_1020 ,2,2026-08-10,card,SHELL OIL 57318,SHELL OIL 57318,62.40
+    CSV
+
+    assert_equal [["txn_1020", "62.40"]], feed.transactions.map { |transaction| [transaction.id, format("%.2f", transaction.amount)] }
+  end
 end
