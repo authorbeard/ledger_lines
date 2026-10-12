@@ -4,7 +4,9 @@ class TransactionFeed
   end
 
   def transactions
-    latest_rows.map { |row| FeedTransaction.new(row) }
+    rows = latest_rows
+    transfer_legs = TransferLegIndex.new(rows)
+    rows.map { |row| FeedTransaction.new(row, transfer_legs:) }
   end
 
   def latest_rows

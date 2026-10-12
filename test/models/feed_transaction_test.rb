@@ -34,4 +34,13 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal ["purchase"], feed.transactions.map(&:ledger_type)
   end
+
+  def test_both_legs_of_a_card_payment_are_transfers
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1016,1,2026-08-08,bank,ONLINE PAYMENT TO CARD 4421,ONLINE PAYMENT TO CARD 4421,4850.00
+      txn_1017,1,2026-08-08,card,PAYMENT RECEIVED,ONLINE PAYMENT - THANK YOU,-4850.00
+    CSV
+
+    assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
+  end
 end
