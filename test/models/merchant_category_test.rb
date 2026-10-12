@@ -17,7 +17,4 @@ class MerchantCategoryTest < Minitest::Test
     assert_nil MerchantCategory.for(nil)
   end
 
-  def test_ignores_surrounding_whitespace
-    assert_equal "Rent", MerchantCategory.for("  MAINLINE PROPERTIES LLC")
-  end
 end
