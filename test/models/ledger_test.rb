@@ -17,4 +17,15 @@ class LedgerTest < Minitest::Test
     expected_lines = File.read(File.join(FIXTURE_FILES, "expected_first_15.csv")).lines(chomp: true)
     assert_equal expected_lines, ledger.to_csv.lines(chomp: true).first(16)
   end
+
+  def test_importing_the_same_feed_twice_leaves_the_ledger_unchanged
+    ledger = Ledger.new
+    File.open(File.join(FIXTURE_FILES, "transactions.csv")) { |file| ledger.import(TransactionFeed.new(file).transactions) }
+    first_import = ledger.to_csv
+
+    File.open(File.join(FIXTURE_FILES, "transactions.csv")) { |file| ledger.import(TransactionFeed.new(file).transactions) }
+
+    assert_equal 56, ledger.lines.size
+    assert_equal first_import, ledger.to_csv
+  end
 end
