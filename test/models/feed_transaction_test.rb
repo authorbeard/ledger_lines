@@ -87,4 +87,20 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
   end
+
+  def test_a_listed_merchant_is_categorized_and_not_flagged_for_review
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1003,1,2026-08-03,card,HOME DEPOT #4102,HOME DEPOT #4102,146.88
+    CSV
+
+    assert_equal [["Repairs & maintenance", false]], feed.transactions.map { |transaction| [transaction.category, transaction.needs_review?] }
+  end
+
+  def test_an_unlisted_merchant_is_uncategorized_and_flagged_for_review
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1006,1,2026-08-04,card,AMZN MKTP US*2K4X9,AMAZON MARKETPLACE,84.12
+    CSV
+
+    assert_equal [["Uncategorized", true]], feed.transactions.map { |transaction| [transaction.category, transaction.needs_review?] }
+  end
 end

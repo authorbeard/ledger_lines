@@ -1,6 +1,7 @@
 class FeedTransaction
   TYPES_IN_PRECEDENCE = %w[transfer refund deposit].freeze
   OPERATOR_ACCOUNT_OUTSIDE_FEED = /SAVINGS/i
+  UNCATEGORIZED = "Uncategorized"
 
   def initialize(row, transfer_legs:)
     @row = row
@@ -11,12 +12,24 @@ class FeedTransaction
     TYPES_IN_PRECEDENCE.find { |type| send(:"#{type}?") } || "purchase"
   end
 
+  def category
+    MerchantCategory.for(merchant) || UNCATEGORIZED
+  end
+
+  def needs_review?
+    category == UNCATEGORIZED
+  end
+
   def date
     @row["date"]
   end
 
   def account
     @row["account"]
+  end
+
+  def merchant
+    @row["merchant"]
   end
 
   def memo
