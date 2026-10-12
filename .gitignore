@@ -57,8 +57,3 @@ build-iPhoneSimulator/
 
 # Local record of user prompts
 /doc/user_inputs/
-
-# Agent config: .agents is a symlink to the shared source; everything materialized from it stays local
-/.agents
-/.claude/
-/CLAUDE.md
