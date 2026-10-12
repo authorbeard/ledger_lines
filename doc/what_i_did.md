@@ -22,6 +22,7 @@ My part of the work, as distinct from what Claude Code generated.
 - Ordered an adversarial review of the classifier, then a second round focused on over-engineering.
 - Asked whether US date patterns should be assumed or enforced.
 - After the over-engineering review, chose a middle-ground refactor over collapsing everything into a single service: a service that takes the file path and returns the ledger CSV, while keeping the `Ledger`, `LedgerLine` and `FeedTransaction` shapes. This was in part because we don't yet know enough to begin implementing the `Ledger` class, or some of the others, so they stay minimal rather than being either removed or built out.
+- Directed further simplification in PR review: hold transfer-like rows until their other leg is found instead of making a separate pairing pass, merge `FeedTransaction` into `LedgerLine` and drop its getter methods, and bring the time complexity down to a single pass over the file.
 - Moved the work onto a branch for review and kept all agent configuration out of the repository.
 
 ## PR review

@@ -31,28 +31,28 @@ bundle exec rake test
 flowchart LR
     A[transactions.csv] --> B[rake ledger_lines]
     B --> C[LedgerLinesService.call]
-    C --> D[read once: keep highest<br/>sync_batch per id, sort by id]
-    D --> E[TransferLegPairing<br/>pair transfer legs one-to-one]
-    E --> F[FeedTransaction<br/>type, category, needs_review]
-    F --> G[Ledger<br/>one LedgerLine per transaction_id]
-    G --> H[ledger_lines.csv on stdout]
+    C --> D[read each row once]
+    D --> E[Ledger#record<br/>keep highest sync_batch per id]
+    E --> F[hold rows with a<br/>PAYMENT or TRANSFER memo]
+    F --> G[pair held legs one-to-one]
+    E --> H[LedgerLine#to_csv_row<br/>type, category, needs_review]
+    G --> H
+    H --> I[ledger_lines.csv on stdout]
 ```
 
-The rake task passes the CSV path to `LedgerLinesService.call`, which can equally be called from the app or a background job. The service reads the file once, keeping only the latest version of each transaction id, and sorts the survivors by id so output never depends on row order. `TransferLegPairing` matches each payment or transfer row with at most one opposite leg in the other account. Each `FeedTransaction` then determines its type (transfer, refund, deposit, otherwise purchase), its category from the merchant list, and whether it needs review. `Ledger` records one `LedgerLine` per transaction id and returns the CSV, which the task writes to stdout.
+The rake task passes the CSV path to `LedgerLinesService.call`, which can equally be called from the app or a background job. The service reads the file once. Each row is recorded in the `Ledger` as a `LedgerLine`, replacing an earlier version of the same transaction id only if its `sync_batch` is higher. Rows whose memo mentions a payment or transfer are also held aside. Once the file is read, the held rows are paired with an opposite leg in the other account, one-to-one. Each line then works out its type (transfer, refund, deposit, otherwise purchase), its category from the merchant list, and whether it needs review, as the CSV is written.
 
 ### Time complexity
 
-With n rows in the file, u unique transaction ids, and m merchants on the list:
+With n rows in the file and t rows whose memo mentions a payment or transfer:
 
 | Step | Time |
 |------|------|
-| Read and deduplicate | O(n) |
-| Sort by id | O(u log u) |
-| Pair transfer legs | O(u) expected; hash lookups by date and amount |
-| Classify and categorize | O(u * m); each merchant is checked against the prefix list |
-| Record lines and write CSV | O(u) |
+| Read rows and keep the highest sync_batch per id | O(n) |
+| Pair held transfer legs | O(t) expected; grouped by date and amount |
+| Classify, categorize and write CSV | O(n); merchant lookups are cached per distinct merchant |
 
-Overall O(n + u log u + u * m), with O(u) memory. With a fixed 16-merchant list, the sort dominates as feeds grow.
+Overall O(n) time and O(u) memory, where u is the number of unique transaction ids.
 
 ## Further documentation
 

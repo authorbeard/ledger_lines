@@ -5,7 +5,7 @@ Follow-up work deliberately left out of this demonstration.
 ## Persistence
 
 - Replace the ActiveModel stand-ins with ActiveRecord models and migrations: `ledgers` (operator, source file, import metadata) and `ledger_lines` belonging to a ledger.
-- Declare `enum :transaction_type, { purchase: 0, refund: 1, deposit: 2, transfer: 3 }` on `LedgerLine` in place of the inclusion validation.
+- Persist the computed type as `enum :transaction_type, { purchase: 0, refund: 1, deposit: 2, transfer: 3 }` on `LedgerLine`, set before save. The classification rules are named so they do not collide with the enum's `refund?`-style predicates.
 - Add a unique index on `ledger_lines (ledger_id, transaction_id)` so the database enforces one line per transaction, not only the application code.
 - Swap the in-memory `Ledger#record` for `ledger_lines.find_or_initialize_by(transaction_id:)`, or `upsert_all` keyed on that unique index once feeds are large enough that per-row queries matter.
 
@@ -24,10 +24,10 @@ Follow-up work deliberately left out of this demonstration.
 ## Scale
 
 - The import reads the feed in a single pass and holds one row per unique id in memory until classification. For feeds too large for that, process in batches keyed by id range or date window, or stage rows in a database table and let a unique index on the transaction id resolve re-syncs.
-- Reduce the time complexity from O(n + u log u + u * m) toward O(n):
-  - Drop the in-memory sort. It exists only to make output and pairing independent of row order. Once lines are persisted, output order comes from an indexed `ORDER BY` in the database. Pairing only needs a deterministic order within each date-and-amount bucket of transfer-memo rows, which is a small fraction of the feed.
-  - Make the merchant lookup constant-time. Key merchants by their normalized first word (or cache each merchant string variant once resolved, as noted under Merchant matching) instead of scanning the whole list for every row.
-  - Compute each transaction's type once. `category` and `needs_review?` currently recompute `ledger_type`, roughly tripling the classification work per row.
+- Reduce the remaining costs below the current O(n):
+  - The first lookup of each distinct merchant still scans the prefix list. Key the list by the merchant's normalized first word for a constant-time first lookup, and persist resolved merchant variants (see Merchant matching) so the cache survives between imports.
+  - Within a date-and-amount group, pairing scans the unpaired legs, which is quadratic in the size of the group. Groups are tiny in practice; keeping a queue per account would make it linear if they are not.
+  - The merchant cache is process-wide. Under threaded workers, make it thread-safe or scope it to a single import.
 - Run the import as a background job per operator feed rather than a rake task, with the rake task kept as a manual entry point.
 
 ## Hardening
