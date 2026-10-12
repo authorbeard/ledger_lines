@@ -16,5 +16,4 @@ class MerchantCategoryTest < Minitest::Test
   def test_returns_nil_for_a_missing_merchant
     assert_nil MerchantCategory.for(nil)
   end
-
 end

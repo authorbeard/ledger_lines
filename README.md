@@ -30,15 +30,15 @@ bundle exec rake test
 ```mermaid
 flowchart LR
     A[transactions.csv] --> B[rake ledger_lines]
-    B --> C[TransactionFeedService<br/>keep highest sync_batch per id]
-    C --> D[TransferLegIndex<br/>pair transfer legs]
-    C --> E[FeedTransaction<br/>type, category, needs_review]
-    D --> E
-    E --> F[Ledger<br/>one LedgerLine per transaction_id]
-    F --> G[ledger_lines.csv on stdout]
+    B --> C[LedgerLinesService.call]
+    C --> D[read once: keep highest<br/>sync_batch per id, sort by id]
+    D --> E[TransferLegPairing<br/>pair transfer legs one-to-one]
+    E --> F[FeedTransaction<br/>type, category, needs_review]
+    F --> G[Ledger<br/>one LedgerLine per transaction_id]
+    G --> H[ledger_lines.csv on stdout]
 ```
 
-The rake task opens the CSV and hands it to `TransactionFeedService`, which reads it once and keeps only the latest version of each transaction id. Each surviving row becomes a `FeedTransaction`. `TransferLegIndex` pairs payment and transfer rows with their opposite leg in the other account. Each transaction then works out its type (transfer, refund, deposit, otherwise purchase), its category from the merchant list, and whether it needs review. `Ledger` records one `LedgerLine` per transaction id and writes them out as CSV.
+The rake task passes the CSV path to `LedgerLinesService.call`, which can equally be called from the app or a background job. The service reads the file once, keeping only the latest version of each transaction id, and sorts the survivors by id so output never depends on row order. `TransferLegPairing` matches each payment or transfer row with at most one opposite leg in the other account. Each `FeedTransaction` then determines its type (transfer, refund, deposit, otherwise purchase), its category from the merchant list, and whether it needs review. `Ledger` records one `LedgerLine` per transaction id and returns the CSV, which the task writes to stdout.
 
 ## Further documentation
 
