@@ -1,5 +1,6 @@
 class FeedTransaction
   TYPES_IN_PRECEDENCE = %w[transfer refund deposit].freeze
+  OPERATOR_ACCOUNT_OUTSIDE_FEED = /SAVINGS/i
 
   def initialize(row, transfer_legs:)
     @row = row
@@ -29,7 +30,11 @@ class FeedTransaction
   private
 
   def transfer?
-    TransferLegIndex.transfer_memo?(memo) && @transfer_legs.opposite_leg_present?(date:, account:, amount:)
+    TransferLegIndex.transfer_memo?(memo) && counterpart_is_operator_account?
+  end
+
+  def counterpart_is_operator_account?
+    OPERATOR_ACCOUNT_OUTSIDE_FEED.match?(memo.to_s) || @transfer_legs.opposite_leg_present?(date:, account:, amount:)
   end
 
   def refund?

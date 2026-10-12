@@ -78,4 +78,13 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
   end
+
+  def test_moves_to_and_from_savings_are_transfers_without_a_savings_leg_in_the_feed
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1027,1,2026-08-13,bank,TRANSFER TO SAVINGS 8810,ONLINE TRANSFER TO SAVINGS 8810,10000.00
+      txn_1040,1,2026-08-19,bank,TRANSFER FROM SAVINGS 8810,ONLINE TRANSFER FROM SAVINGS 8810,-5000.00
+    CSV
+
+    assert_equal %w[transfer transfer], feed.transactions.map(&:ledger_type)
+  end
 end
