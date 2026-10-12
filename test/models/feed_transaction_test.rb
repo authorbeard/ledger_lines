@@ -10,4 +10,12 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal ["purchase"], feed.transactions.map(&:ledger_type)
   end
+
+  def test_a_negative_card_amount_is_a_refund
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1018,1,2026-08-08,card,SYSCO PHILA 8827,SYSCO CREDIT SHORTED DELIVERY,-184.20
+    CSV
+
+    assert_equal ["refund"], feed.transactions.map(&:ledger_type)
+  end
 end
