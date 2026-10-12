@@ -18,4 +18,20 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal ["refund"], feed.transactions.map(&:ledger_type)
   end
+
+  def test_a_negative_bank_amount_is_a_deposit
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1002,1,2026-08-03,bank,DOORDASH PAYOUT,DOORDASH INC PAYOUT,-2210.45
+    CSV
+
+    assert_equal ["deposit"], feed.transactions.map(&:ledger_type)
+  end
+
+  def test_a_positive_bank_amount_is_a_purchase
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1007,1,2026-08-05,bank,METRO GAS & ELECTRIC,AUTOPAY METRO GAS & ELECTRIC,1288.40
+    CSV
+
+    assert_equal ["purchase"], feed.transactions.map(&:ledger_type)
+  end
 end

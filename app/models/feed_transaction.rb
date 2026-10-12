@@ -1,5 +1,5 @@
 class FeedTransaction
-  TYPES_IN_PRECEDENCE = %w[refund].freeze
+  TYPES_IN_PRECEDENCE = %w[refund deposit].freeze
 
   def initialize(row)
     @row = row
@@ -19,8 +19,16 @@ class FeedTransaction
     card? && money_in?
   end
 
+  def deposit?
+    bank? && money_in?
+  end
+
   def card?
     @row["account"] == "card"
+  end
+
+  def bank?
+    @row["account"] == "bank"
   end
 
   def money_in?
