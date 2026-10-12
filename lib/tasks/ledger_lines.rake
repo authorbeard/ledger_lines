@@ -4,7 +4,5 @@ task :ledger_lines, [:path] do |_task, args|
 
   abort "Usage: rake \"ledger_lines[path/to/transactions.csv]\"" if args[:path].nil?
 
-  ledger = Ledger.new
-  File.open(args[:path], "r:bom|utf-8") { |file| ledger.import(TransactionFeedService.new(file).transactions) }
-  $stdout.write(ledger.to_csv)
+  $stdout.write(LedgerLinesService.call(args[:path]))
 end
