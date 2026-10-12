@@ -144,4 +144,13 @@ class FeedTransactionTest < Minitest::Test
 
     assert_raises(Date::Error) { feed.transactions.map(&:date) }
   end
+
+  def test_legs_on_the_same_account_in_different_case_do_not_pair
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_2008,1,2026-08-08,card,PAYMENT REVERSAL,PAYMENT REVERSAL,500.00
+      txn_2009,1,2026-08-08,Card ,PAYMENT RECEIVED,ONLINE PAYMENT - THANK YOU,-500.00
+    CSV
+
+    assert_equal %w[purchase refund], feed.transactions.map(&:ledger_type)
+  end
 end

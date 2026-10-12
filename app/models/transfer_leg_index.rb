@@ -1,18 +1,15 @@
 class TransferLegIndex
-  TRANSFER_MEMO = /PAYMENT|TRANSFER/i
-
-  def self.transfer_memo?(memo)
-    TRANSFER_MEMO.match?(memo.to_s)
+  def initialize
+    @accounts_by_date_and_amount = Hash.new { |index, key| index[key] = Set.new }
   end
 
-  def initialize(rows)
-    @accounts_by_date_and_amount = Hash.new { |index, key| index[key] = Set.new }
-    rows.select { |row| self.class.transfer_memo?(row["memo"]) }.each do |row|
-      @accounts_by_date_and_amount[[row["date"], BigDecimal(row["amount"])]] << row["account"]
+  def index(transactions)
+    transactions.select(&:transfer_memo?).each do |transaction|
+      @accounts_by_date_and_amount[[transaction.date, transaction.amount]] << transaction.account
     end
   end
 
-  def opposite_leg_present?(date:, account:, amount:)
-    @accounts_by_date_and_amount.fetch([date, -amount], Set.new).any? { |other_account| other_account != account }
+  def opposite_leg_present?(transaction)
+    @accounts_by_date_and_amount.fetch([transaction.date, -transaction.amount], Set.new).any? { |account| account != transaction.account }
   end
 end

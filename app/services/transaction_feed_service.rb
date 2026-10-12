@@ -4,9 +4,8 @@ class TransactionFeedService
   end
 
   def transactions
-    rows = latest_rows
-    transfer_legs = TransferLegIndex.new(rows)
-    rows.map { |row| FeedTransaction.new(row, transfer_legs:) }
+    transfer_legs = TransferLegIndex.new
+    latest_rows.map { |row| FeedTransaction.new(row, transfer_legs:) }.tap { |transactions| transfer_legs.index(transactions) }
   end
 
   def latest_rows

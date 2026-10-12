@@ -1,5 +1,6 @@
 class FeedTransaction
   TYPES_IN_PRECEDENCE = %w[transfer refund deposit].freeze
+  TRANSFER_MEMO = /PAYMENT|TRANSFER/i
   OPERATOR_ACCOUNT_OUTSIDE_FEED = /SAVINGS/i
   UNCATEGORIZED = "Uncategorized"
   ACCOUNTS = %w[card bank].freeze
@@ -31,7 +32,7 @@ class FeedTransaction
   end
 
   def account
-    @row["account"].to_s.downcase
+    @row["account"].to_s.strip.downcase
   end
 
   def merchant
@@ -46,14 +47,18 @@ class FeedTransaction
     BigDecimal(@row["amount"])
   end
 
+  def transfer_memo?
+    TRANSFER_MEMO.match?(memo.to_s)
+  end
+
   private
 
   def transfer?
-    TransferLegIndex.transfer_memo?(memo) && counterpart_is_operator_account?
+    transfer_memo? && counterpart_is_operator_account?
   end
 
   def counterpart_is_operator_account?
-    OPERATOR_ACCOUNT_OUTSIDE_FEED.match?(memo.to_s) || @transfer_legs.opposite_leg_present?(date:, account:, amount:)
+    OPERATOR_ACCOUNT_OUTSIDE_FEED.match?(memo.to_s) || @transfer_legs.opposite_leg_present?(self)
   end
 
   def refund?
