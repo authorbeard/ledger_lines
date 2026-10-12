@@ -24,7 +24,7 @@ Follow-up work deliberately left out of this demonstration.
 ## Scale
 
 - The import reads the feed in a single pass and holds one row per unique id in memory until classification. For feeds too large for that, process in batches keyed by id range or date window, or stage rows in a database table and let a unique index on the transaction id resolve re-syncs.
-- Reduce the remaining costs below the current O(n):
+- Reduce the remaining worst-case and per-row costs within the current O(n):
   - The first lookup of each distinct merchant still scans the prefix list. Key the list by the merchant's normalized first word for a constant-time first lookup, and persist resolved merchant variants (see Merchant matching) so the cache survives between imports.
   - Within a date-and-amount group, pairing scans the unpaired legs, which is quadratic in the size of the group. Groups are tiny in practice; keeping a queue per account would make it linear if they are not.
   - The merchant cache is process-wide. Under threaded workers, make it thread-safe or scope it to a single import.
