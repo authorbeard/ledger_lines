@@ -12,6 +12,8 @@ Question: Is a transfer correctly identified by all three of the following?
 
 MVP assumption: both legs of any transfer appear in a single CSV. If legs can be split across multiple CSV files (for example, across sync windows or separate account exports), a different tracking method is needed, such as persisting unmatched legs and reconciling them on later runs.
 
+Tests that depend on this answer and may need revision: `test_a_payment_memo_without_an_opposite_leg_is_a_purchase` (a transfer-like row missing one leg) and `test_an_opposite_leg_on_the_same_account_is_not_a_transfer` (`txn_2001` would normally have a corresponding bank leg).
+
 Follow-up: legs pair one-to-one, in feed order. When two candidate legs share a date and amount (for example, a 500.00 card payment and a 500.00 ACH rent payment on the same day as a -500.00 card credit), the one that appears first in the file is paired. The rent payment could be recorded as the transfer. Is there a more reliable signal for pairing, such as a reference number shared by both legs or the card's last four digits in the memo?
 
 Follow-up: the feed contains only the card and bank accounts. The savings moves (`txn_1027` TRANSFER TO SAVINGS 8810, `txn_1040` TRANSFER FROM SAVINGS 8810) have only their bank leg in the CSV, but the story says moves to and from savings are transfers. Should the savings account be treated as an operator account whose leg is not expected in the feed?
@@ -95,3 +97,35 @@ Context: the fixture feed uses ISO 8601 dates (`2026-08-03`). A US-style date su
 Question: Should we assume or enforce US date patterns (`MM/DD/YYYY`) for provider feeds, or does every provider send ISO 8601?
 
 Interim decision: only ISO 8601 dates are accepted; any other format stops the import.
+
+## 12. What do we do with a transfer to or from an account type we don't receive CSVs for?
+
+Context: savings moves look like transfers, but the savings account is not in the feed, so only one leg is ever visible. This is related to question 1 (missing legs) but distinct: here the second leg cannot appear in any feed we receive.
+
+Questions: Should there be a static list of the operator's external accounts to check against before confirming a transfer? Could savings transactions be added to the feed in the future, which would change how these are paired?
+
+Interim decision: a transfer memo naming savings is accepted as a transfer without a second leg.
+
+## 13. Does a refund always take the category its purchase would get?
+
+Context: the story says a refund gets the same category the purchase would. A return to a listed merchant (`txn_1024`, HOME DEPOT RETURN) is categorized Repairs & maintenance.
+
+Question: Confirm this rule, including for refunds from unlisted merchants (currently Uncategorized and flagged for review).
+
+Interim decision: refunds use the merchant lookup, as purchases do.
+
+## 14. Do same-account opposite legs need their own type or a review scope?
+
+Context: a payment and its reversal on the same account (`PAYMENT RECEIVED` -500.00 and `PAYMENT REVERSAL` 500.00 on the card) look like transfer legs but are not a transfer. They are classified as a refund and a purchase.
+
+Questions: Do we need another ledger type for these? Will we need an ActiveRecord scope that returns them for review?
+
+Interim decision: classified by the standard rules (refund and purchase).
+
+## 15. How should a transaction whose type cannot be determined be recorded?
+
+Context: every row currently falls through to purchase when no other rule matches, so the type is never unknown. Rows from unrecognized accounts are flagged for review but still typed by the standard rules. They should also be categorized Uncategorized.
+
+Question: Should an unclassifiable row leave its type blank and be flagged `needs_review`? That would make the `transaction_type` enum nullable.
+
+Interim decision: fall through to purchase and flag for review where the account is unrecognized.
