@@ -49,4 +49,4 @@ The rake task passes the CSV path to `LedgerLinesService.call`, which can equall
 
 ## Where I used AI
 
-Claude Code wrote the tests and code test-first from my prompt, one commit per passing test. A separate Claude agent reviewed the classifier adversarially, and each of its findings was reproduced as a failing test before being fixed. Where I overrode or corrected it is in [What I did](doc/what_i_did.md).
+Claude Code wrote the tests and code test-first from my prompt, one commit per passing test, working under Ponytail and a set of agent settings and skills I developed at my current company (listed in [What I did](doc/what_i_did.md#tools-i-used)). A separate Claude agent reviewed the classifier adversarially, and each of its findings was reproduced as a failing test before being fixed. Where I overrode or corrected it is in [What I did](doc/what_i_did.md).

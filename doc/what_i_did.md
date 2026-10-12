@@ -8,6 +8,12 @@ My part of the work, as distinct from what Claude Code generated.
 - Downloaded the take-home materials: the project description, `transactions.csv`, `expected_first_15.csv`, and the merchant list screenshot.
 - Wrote the prompt that set the approach and constraints: a Rails-shaped rake task without a database, test-first, idempotency before categorization, the initial type rules, a commit per passing test, and the two running lists (questions to ask, work to do next). The prompt is in [`ledger_lines_original_prompt.md`](ledger_lines_original_prompt.md).
 
+## Tools I used
+
+- Claude Code, for writing the tests and code, and for running the adversarial reviews as separate agents.
+- [Ponytail](https://github.com/DietrichGebert/ponytail) (MIT), adapted as a rule and a set of review skills that push back on over-engineering. Its whole-repo audit drove the second review round.
+- A group of agent settings, rules and skills I developed for use at my current company. Some are part of the team's shared setup (testing, code design, Ruby style, and commit conventions, plus the bootstrap that installs them); others are my individual settings and preferences (writing style, interaction terms, and ticket and documentation conventions). They were applied locally and kept out of this repository.
+
 ## Decisions during development
 
 - Refined the transfer rule: a transfer must include "payment" or "transfer" and have a corresponding leg in another operator account, with both legs assumed to be in a single CSV for the MVP. Rent goes to a third party, so it is a purchase.
