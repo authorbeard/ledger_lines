@@ -8,4 +8,12 @@ class MerchantCategoryTest < Minitest::Test
   def test_ignores_case_when_matching
     assert_equal "Food & beverage", MerchantCategory.for("Sysco Phila 8827")
   end
+
+  def test_returns_nil_for_a_merchant_not_on_the_list
+    assert_nil MerchantCategory.for("AMZN MKTP US*2K4X9")
+  end
+
+  def test_returns_nil_for_a_missing_merchant
+    assert_nil MerchantCategory.for(nil)
+  end
 end
