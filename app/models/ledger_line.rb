@@ -20,6 +20,9 @@ class LedgerLine
   attribute :paired_transfer, :boolean, default: false
 
   def self.attributes_from_feed(row)
+    amount = BigDecimal(row["amount"])
+    raise ArgumentError, "Invalid amount #{row['amount']} for #{row['id']}" unless amount.finite?
+
     {
       transaction_id: row["id"],
       sync_batch: Integer(row["sync_batch"], 10),
@@ -27,12 +30,16 @@ class LedgerLine
       account: row["account"].to_s.downcase,
       merchant: row["merchant"],
       memo: row["memo"],
-      amount: BigDecimal(row["amount"])
+      amount:
     }
   end
 
   def transfer_memo?
     TRANSFER_MEMO.match?(memo.to_s)
+  end
+
+  def needs_opposite_leg?
+    transfer_memo? && !OPERATOR_ACCOUNT_OUTSIDE_FEED.match?(memo)
   end
 
   def to_csv_row

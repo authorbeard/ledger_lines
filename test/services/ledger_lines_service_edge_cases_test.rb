@@ -74,4 +74,17 @@ class LedgerLinesServiceEdgeCasesTest < Minitest::Test
       assert_equal %w[transfer transfer refund], lines.values_at("txn_1016", "txn_1017", "txn_1052").map { |line| line[1] }
     end
   end
+
+  def test_a_savings_move_does_not_take_the_opposite_leg_of_a_card_payment
+    feed = @fixture_feed.sub("txn_1003,1,2026-08-03,card,HOME DEPOT #4102,HOME DEPOT #4102,146.88",
+                             "txn_1003,1,2026-08-08,bank,TRANSFER TO SAVINGS 8810,ONLINE TRANSFER TO SAVINGS 8810,4850.00")
+    lines = ledger_lines_by_id(ledger_lines_for(feed))
+
+    assert_equal %w[transfer transfer transfer], lines.values_at("txn_1003", "txn_1016", "txn_1017").map { |line| line[1] }
+  end
+
+  # Pending question 10: whether a malformed row should stop the import.
+  def test_rejects_an_amount_that_is_not_a_finite_number
+    assert_raises(ArgumentError) { ledger_lines_for(@fixture_feed.sub("SYSCO PHILA 8827,1842.17", "SYSCO PHILA 8827,NaN")) }
+  end
 end

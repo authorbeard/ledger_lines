@@ -62,7 +62,7 @@ Interim decision: not persisted.
 
 Context: the rules depend on the account being card or bank. A row from any other account (a second card, a savings account added to the feed) has no defined treatment, and a negative amount there would otherwise become a negative purchase.
 
-Question: What is the full set of account values, and are they stable identifiers or display names?
+Question: What is the full set of account values, and are they stable identifiers or display names? A leg on an unrecognized account that pairs with a card or bank leg is currently recorded as a Transfer and not flagged; should it be flagged for review instead?
 
 Interim decision: account names are compared case-insensitively. A row from an account other than card or bank can never be a refund or deposit, so it is typed as a purchase (or a transfer, if it pairs), categorized Uncategorized, and flagged for review.
 
@@ -70,7 +70,7 @@ Interim decision: account names are compared case-insensitively. A row from an a
 
 Context: a zero amount is neither money in nor money out, so it falls through to purchase. Pending authorizations sometimes arrive this way.
 
-Question: Should zero-amount rows be recorded, skipped, or flagged?
+Question: Should zero-amount rows be recorded, skipped, or flagged? Two zero-amount rows with transfer memos on different accounts on the same day currently pair as a transfer.
 
 Interim decision: recorded as a purchase.
 

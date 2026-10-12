@@ -16,7 +16,7 @@ class LedgerLinesService
       transfer_candidates << line if line.transfer_memo?
     end
 
-    transfer_candidates.select(&:transfer_memo?).group_by { |line| [line.date, line.amount.abs] }.each_value do |legs|
+    transfer_candidates.select(&:needs_opposite_leg?).group_by { |line| [line.date, line.amount.abs] }.each_value do |legs|
       pair_transfer_legs(legs)
     end
 
