@@ -1,5 +1,6 @@
 require "test_helper"
 require "rake"
+require "tmpdir"
 
 class LedgerLinesTaskTest < Minitest::Test
   def setup
@@ -27,5 +28,17 @@ class LedgerLinesTaskTest < Minitest::Test
     _output, errors = capture_io { assert_raises(SystemExit) { Rake::Task["ledger_lines"].invoke } }
 
     assert_match "Usage", errors
+  end
+
+  def test_reads_a_feed_saved_with_a_byte_order_mark
+    Dir.mktmpdir do |directory|
+      feed_path = File.join(directory, "transactions.csv")
+      File.write(feed_path, "\uFEFF" + File.read(File.join(FIXTURE_FILES, "transactions.csv")))
+
+      output, _errors = capture_io { Rake::Task["ledger_lines"].invoke(feed_path) }
+
+      assert_equal "txn_1001", output.lines[1].split(",").first
+      assert_equal 56, output.lines.size - 1
+    end
   end
 end

@@ -55,4 +55,15 @@ class TransactionFeedServiceTest < Minitest::Test
 
     assert_equal [["txn_1020", "62.40"]], feed.latest_rows.map { |row| [row["id"], row["amount"]] }
   end
+
+  def test_skips_blank_lines
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_1001,1,2026-08-03,card,SYSCO PHILA 8827,SYSCO PHILA 8827,1842.17
+
+      txn_1003,1,2026-08-03,card,HOME DEPOT #4102,HOME DEPOT #4102,146.88
+
+    CSV
+
+    assert_equal %w[txn_1001 txn_1003], feed.latest_rows.map { |row| row["id"] }
+  end
 end

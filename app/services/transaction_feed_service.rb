@@ -10,7 +10,7 @@ class TransactionFeedService
   end
 
   def latest_rows
-    CSV.new(@source, headers: true).each_with_object({}) do |row, latest_by_id|
+    CSV.new(@source, headers: true, skip_blanks: true).each_with_object({}) do |row, latest_by_id|
       current = latest_by_id[row["id"]]
       latest_by_id[row["id"]] = row if current.nil? || sync_batch(row) > sync_batch(current)
     end.values
