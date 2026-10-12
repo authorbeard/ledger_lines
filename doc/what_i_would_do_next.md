@@ -24,6 +24,10 @@ Follow-up work deliberately left out of this demonstration.
 ## Scale
 
 - The import reads the feed in a single pass and holds one row per unique id in memory until classification. For feeds too large for that, process in batches keyed by id range or date window, or stage rows in a database table and let a unique index on the transaction id resolve re-syncs.
+- Reduce the time complexity from O(n + u log u + u * m) toward O(n):
+  - Drop the in-memory sort. It exists only to make output and pairing independent of row order. Once lines are persisted, output order comes from an indexed `ORDER BY` in the database. Pairing only needs a deterministic order within each date-and-amount bucket of transfer-memo rows, which is a small fraction of the feed.
+  - Make the merchant lookup constant-time. Key merchants by their normalized first word (or cache each merchant string variant once resolved, as noted under Merchant matching) instead of scanning the whole list for every row.
+  - Compute each transaction's type once. `category` and `needs_review?` currently recompute `ledger_type`, roughly tripling the classification work per row.
 - Run the import as a background job per operator feed rather than a rake task, with the rake task kept as a manual entry point.
 
 ## Hardening

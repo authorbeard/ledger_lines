@@ -40,6 +40,20 @@ flowchart LR
 
 The rake task passes the CSV path to `LedgerLinesService.call`, which can equally be called from the app or a background job. The service reads the file once, keeping only the latest version of each transaction id, and sorts the survivors by id so output never depends on row order. `TransferLegPairing` matches each payment or transfer row with at most one opposite leg in the other account. Each `FeedTransaction` then determines its type (transfer, refund, deposit, otherwise purchase), its category from the merchant list, and whether it needs review. `Ledger` records one `LedgerLine` per transaction id and returns the CSV, which the task writes to stdout.
 
+### Time complexity
+
+With n rows in the file, u unique transaction ids, and m merchants on the list:
+
+| Step | Time |
+|------|------|
+| Read and deduplicate | O(n) |
+| Sort by id | O(u log u) |
+| Pair transfer legs | O(u) expected; hash lookups by date and amount |
+| Classify and categorize | O(u * m); each merchant is checked against the prefix list |
+| Record lines and write CSV | O(u) |
+
+Overall O(n + u log u + u * m), with O(u) memory. With a fixed 16-merchant list, the sort dominates as feeds grow.
+
 ## Further documentation
 
 - [What I would ask before starting](doc/what_i_would_ask_before_starting.md): what was unclear or wrong in the story, with the interim decision made for each.
