@@ -1,4 +1,4 @@
-class TransactionFeed
+class TransactionFeedService
   def initialize(source)
     @source = source
   end
