@@ -22,7 +22,6 @@ My part of the work, as distinct from what Claude Code generated.
 - Ordered an adversarial review of the classifier, then a second round focused on over-engineering.
 - Asked whether US date patterns should be assumed or enforced.
 - After the over-engineering review, chose a middle-ground refactor over collapsing everything into a single service: a service that takes the file path and returns the ledger CSV, while keeping the `Ledger`, `LedgerLine` and `FeedTransaction` shapes. This was in part because we don't yet know enough to begin implementing the `Ledger` class, or some of the others, so they stay minimal rather than being either removed or built out.
-- Directed further simplification in PR review: hold transfer-like rows until their other leg is found instead of making a separate pairing pass, merge `FeedTransaction` into `LedgerLine` and drop its getter methods, and bring the time complexity down to a single pass over the file.
 - Moved the work onto a branch for review and kept all agent configuration out of the repository.
 
 ## PR review
@@ -42,3 +41,28 @@ Reviewed the pull request once all the commits were in and left these comments:
 - `TransactionFeedService#transactions` is hard to read; use `do ... end`.
 - The rake task should not assemble the pieces itself. The service should orchestrate: take the file path and return the ledger's CSV, callable as-is from the app or a Sidekiq job.
 - `TransactionFeedService` adds at least one full iteration over the source before further processing. Justify it or refactor; the class may be unnecessary.
+
+## Second review round
+
+After the first refactor, I left one more PR comment and followed up with three prompts.
+
+PR comment, on `app/services/ledger_lines_service.rb`:
+
+> This still entails a second pass over almost the entire set of transactions. Instead, a transaction that looks like a transfer should be held until or unless its other leg is found. If it is, then the transfer can be recorded for both accounts, and if it's not, then it can be categorized later. Mark this code as pending answers on whether transfer legs will always be present in the same transactions file.
+
+Prompts:
+
+> It looks like you've kept some classes that the adversarial review recommended dropping. Check that and also address my most recent comment.
+
+> Also, I'm not sure FeedTransaction and LedgerLine need to be two different classes here. A lot of the getter methods in FeedTransaction are overkill at this point and just add padding and cruft.
+
+> The current time complexity is far too high.
+
+Outcome:
+
+- Classes: of the five the over-engineering review recommended dropping, `TransactionFeedService`, the transfer leg index, and `FeedTransaction` were removed. `Ledger` and `LedgerLine` remain, per the middle-ground decision. The code is now four files: `LedgerLinesService`, `Ledger`, `LedgerLine`, and `MerchantCategory`.
+- Transfers: rows with a PAYMENT or TRANSFER memo are held while the file is read, then paired one-to-one within groups of the same date and amount; a leg without an opposite is classified by the remaining rules. The code is marked as pending the answer on whether both legs always arrive in the same file. Legs are matched at the end of the read rather than the moment the second arrives, because matching on arrival would make the result depend on row order whenever three or more legs share a date and amount.
+- Classes merged: each feed row becomes a `LedgerLine` with ActiveModel attributes, replacing `FeedTransaction` and its getter methods. The type rules are named for what they check (`card_credit?`, `bank_credit?`, `operator_transfer?`) so they will not collide with an ActiveRecord enum's predicates. The `transaction_type` validation was dropped, since the type is computed and cannot be invalid.
+- Time complexity: from O(n + u log u + u * m) to O(n). `Ledger#record` keeps the highest `sync_batch` per id during the read, so deduplication is no longer a separate step. Type, category and review status are computed once per line when the CSV is written. Merchant lookups are cached per distinct merchant string. The output sort was removed, so lines follow the order ids first appear in the feed; output order became open question 16.
+- Verification: the suite passes, the first 15 lines still match `expected_first_15.csv`, and each design change was checked by deliberately breaking it (8 targeted mutations, all caught).
+
