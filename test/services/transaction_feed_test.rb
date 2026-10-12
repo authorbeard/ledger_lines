@@ -37,4 +37,13 @@ class TransactionFeedTest < Minitest::Test
     assert_equal rows.map { |row| row["id"] }.uniq, rows.map { |row| row["id"] }
     assert_equal %w[2 2 2 2], rows.select { |row| %w[txn_1020 txn_1035 txn_1041 txn_1046].include?(row["id"]) }.map { |row| row["sync_batch"] }
   end
+
+  def test_keeps_the_first_row_when_an_id_repeats_within_the_same_sync_batch
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1020,2,2026-08-10,card,SHELL OIL 57318,SHELL OIL 57318,62.40
+      txn_1020,2,2026-08-10,card,SHELL OIL 57318,SHELL OIL 57318,63.00
+    CSV
+
+    assert_equal [["txn_1020", "62.40"]], feed.latest_rows.map { |row| [row["id"], row["amount"]] }
+  end
 end
