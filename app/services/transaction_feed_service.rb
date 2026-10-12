@@ -19,6 +19,6 @@ class TransactionFeedService
   private
 
   def sync_batch(row)
-    Integer(row["sync_batch"])
+    Integer(row["sync_batch"], 10)
   end
 end

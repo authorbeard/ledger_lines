@@ -46,4 +46,13 @@ class TransactionFeedServiceTest < Minitest::Test
 
     assert_equal [["txn_1020", "62.40"]], feed.latest_rows.map { |row| [row["id"], row["amount"]] }
   end
+
+  def test_reads_zero_padded_sync_batches_as_decimal
+    feed = TransactionFeedService.new(StringIO.new(HEADER + <<~CSV))
+      txn_1020,010,2026-08-10,card,SHELL OIL 57318,SHELL OIL 57318,62.40
+      txn_1020,9,2026-08-10,card,SHELL OIL 57318,PENDING - SHELL OIL,1.00
+    CSV
+
+    assert_equal [["txn_1020", "62.40"]], feed.latest_rows.map { |row| [row["id"], row["amount"]] }
+  end
 end
