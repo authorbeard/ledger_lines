@@ -19,6 +19,6 @@ class MerchantCategory
   }.freeze
 
   def self.for(merchant)
-    CATEGORIES_BY_MERCHANT_PREFIX.find { |prefix, _category| merchant.start_with?(prefix) }&.last
+    CATEGORIES_BY_MERCHANT_PREFIX.find { |prefix, _category| merchant.upcase.start_with?(prefix) }&.last
   end
 end
