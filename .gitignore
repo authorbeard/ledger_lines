@@ -56,3 +56,6 @@ build-iPhoneSimulator/
 
 # Local record of user prompts
 /doc/user_inputs/
+
+# Output of the ledger_lines task
+/ledger_lines.csv
