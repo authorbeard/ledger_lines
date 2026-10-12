@@ -103,4 +103,21 @@ class FeedTransactionTest < Minitest::Test
 
     assert_equal [["Uncategorized", true]], feed.transactions.map { |transaction| [transaction.category, transaction.needs_review?] }
   end
+
+  def test_transfers_are_categorized_as_transfer_and_not_flagged_for_review
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1016,1,2026-08-08,bank,ONLINE PAYMENT TO CARD 4421,ONLINE PAYMENT TO CARD 4421,4850.00
+      txn_1017,1,2026-08-08,card,PAYMENT RECEIVED,ONLINE PAYMENT - THANK YOU,-4850.00
+    CSV
+
+    assert_equal [["Transfer", false], ["Transfer", false]], feed.transactions.map { |transaction| [transaction.category, transaction.needs_review?] }
+  end
+
+  def test_a_refund_takes_the_category_its_purchase_would_get
+    feed = TransactionFeed.new(StringIO.new(HEADER + <<~CSV))
+      txn_1024,1,2026-08-11,card,HOME DEPOT #4102,HOME DEPOT RETURN,-59.99
+    CSV
+
+    assert_equal [["refund", "Repairs & maintenance", false]], feed.transactions.map { |transaction| [transaction.ledger_type, transaction.category, transaction.needs_review?] }
+  end
 end

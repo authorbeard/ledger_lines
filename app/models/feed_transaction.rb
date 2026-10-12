@@ -2,6 +2,7 @@ class FeedTransaction
   TYPES_IN_PRECEDENCE = %w[transfer refund deposit].freeze
   OPERATOR_ACCOUNT_OUTSIDE_FEED = /SAVINGS/i
   UNCATEGORIZED = "Uncategorized"
+  CATEGORIES_BY_LEDGER_TYPE = { "transfer" => "Transfer" }.freeze
 
   def initialize(row, transfer_legs:)
     @row = row
@@ -13,7 +14,7 @@ class FeedTransaction
   end
 
   def category
-    MerchantCategory.for(merchant) || UNCATEGORIZED
+    CATEGORIES_BY_LEDGER_TYPE.fetch(ledger_type) { MerchantCategory.for(merchant) || UNCATEGORIZED }
   end
 
   def needs_review?
