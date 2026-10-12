@@ -19,10 +19,10 @@ bundle exec rake "ledger_lines[<path_to_csv>]" > ledger_lines.csv
 
 The task takes the path to a transactions CSV as its only argument and writes the ledger lines CSV to stdout. Running it again on the same feed produces identical output.
 
-Run the tests with:
+Run all the tests with:
 
 ```sh
-bundle exec rake test
+bundle install && bundle exec rake test
 ```
 
 ## How it works
