@@ -8,7 +8,7 @@ Requires Ruby 3.4.1 (see `.ruby-version`).
 
 ```sh
 bundle install
-bundle exec rake "ledger_lines[test/fixtures/files/transactions.csv]" > ledger_lines.csv
+bundle exec rake "ledger_lines[<path_to_csv>]" > ledger_lines.csv
 bundle exec rake test
 ```
 
