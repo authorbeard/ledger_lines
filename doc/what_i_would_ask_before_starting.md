@@ -28,9 +28,9 @@ Question: Should payments like this be a distinct type or category beyond "purch
 
 Interim decision: treat it as a purchase with category Rent (from the merchant list).
 
-## 3. What should happen when the same id appears twice in the same sync_batch?
+## 3. What should happen when the same id appears twice in the same sync_batch with different data?
 
-Context: the rule is "keep the version from the highest sync_batch", which does not decide between two rows that share an id and a batch number.
+Context: the rule is "keep the version from the highest sync_batch", which does not decide between two rows that share a transaction id and a batch number but differ in other fields, such as the amount, merchant, or memo.
 
 Question: Can the provider send this, and if so, which row is authoritative, or should the line be flagged for review?
 
